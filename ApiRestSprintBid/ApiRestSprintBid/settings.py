@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-3a7w!evg@r=c2b+rlotchmvxyu1_yrxz&n%8q94vbx)7i9=@@%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
@@ -40,17 +40,19 @@ INSTALLED_APPS = [
     'auctions', #para asociar la nueva aplicación (auction) al proyecto
     'rest_framework', #para importar el framework django REST al proyecto
     'drf_spectacular', #para importar la extensión drf spectacular al proyecto
+    'corsheaders', #Linea añadida para permitir el acceso a la API desde el frontend
 ]
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+MIDDLEWARE = [ 
+    'corsheaders.middleware.CorsMiddleware', #Añadir en primera posición 
+    'django.middleware.common.CommonMiddleware', #Mover a segunda posición 
+    'django.middleware.security.SecurityMiddleware', 
+    'django.contrib.sessions.middleware.SessionMiddleware', 
+    'django.middleware.csrf.CsrfViewMiddleware', 
+    'django.contrib.auth.middleware.AuthenticationMiddleware', 
+    'django.contrib.messages.middleware.MessageMiddleware', 
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',    
+] 
 
 ROOT_URLCONF = 'myFirstApiRest.urls'
 
@@ -137,3 +139,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+
+CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_CREDENTIALS = True 
