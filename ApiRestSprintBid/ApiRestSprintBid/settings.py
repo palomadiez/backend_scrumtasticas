@@ -54,7 +54,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',    
 ] 
 
-ROOT_URLCONF = 'myFirstApiRest.urls'
+ROOT_URLCONF = 'ApiRestSprintBid.urls'
 
 TEMPLATES = [
     {
@@ -72,7 +72,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'myFirstApiRest.wsgi.application'
+WSGI_APPLICATION = 'ApiRestSprintBid.wsgi.application'
 
 
 # Database
