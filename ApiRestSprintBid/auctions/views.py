@@ -26,6 +26,10 @@ class AuctionListCreate(generics.ListCreateAPIView):
                 Q(title__icontains=texto) |
                 Q(description__icontains=texto)
             )
+        
+        categoria = self.request.query_params.get('categoria', None)
+        if categoria:
+            queryset = queryset.filter(category__name__icontains = categoria)
         return queryset
     
 class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
