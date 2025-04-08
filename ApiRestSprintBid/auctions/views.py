@@ -30,6 +30,14 @@ class AuctionListCreate(generics.ListCreateAPIView):
         categoria = self.request.query_params.get('categoria', None)
         if categoria:
             queryset = queryset.filter(category__name__icontains = categoria)
+
+        precio_min = self.request.query_params.get('precioMin')
+        precio_max = self.request.query_params.get('precioMax')
+        if precio_min:
+            queryset = queryset.filter(price__gte=precio_min)
+
+        if precio_max:
+            queryset = queryset.filter(price__lte=precio_max)
         return queryset
     
 class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
