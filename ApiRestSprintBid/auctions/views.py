@@ -3,6 +3,9 @@ from rest_framework import generics
 from .models import Category, Auction, Bid
 from .serializers import CategoryListCreateSerializer, CategoryDetailSerializer, AuctionListCreateSerializer, AuctionDetailSerializer, BidSerializer
 from django.db.models import Q
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 #Categorías
 class CategoryListCreate(generics.ListCreateAPIView):
@@ -63,4 +66,14 @@ class BidRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         auction_id = self.kwargs['auction_id']
         return Bid.objects.filter(auction_id=auction_id)
+    
+
+# Users
+class UserAuctionListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        # Obtener las subastas del usuario autenticado
+        user_auctions = Auction.objects.filter(auctioneer=request.user)
+        serializer = AuctionListCreateSerializer(user_auctions, many=True)
+        return Response(serializer.data)
 
