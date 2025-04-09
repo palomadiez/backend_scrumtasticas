@@ -6,6 +6,7 @@ from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from .permissions import IsOwnerOrAdmin
 
 #Categorías
 class CategoryListCreate(generics.ListCreateAPIView):
@@ -45,6 +46,7 @@ class AuctionListCreate(generics.ListCreateAPIView):
         return queryset
     
 class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsOwnerOrAdmin]
     queryset = Auction.objects.all()
     serializer_class = AuctionDetailSerializer
 
