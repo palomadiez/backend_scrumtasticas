@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+
 class IsOwnerOrAdmin(BasePermission):
     """
     Permite editar/eliminar una subasta solo si el usuario es el propietario

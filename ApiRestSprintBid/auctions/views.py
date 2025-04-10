@@ -45,6 +45,7 @@ class AuctionListCreate(generics.ListCreateAPIView):
             queryset = queryset.filter(price__lte=precio_max)
         return queryset
     
+    
 class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrAdmin]
     queryset = Auction.objects.all()

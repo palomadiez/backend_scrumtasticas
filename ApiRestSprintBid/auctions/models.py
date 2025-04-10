@@ -21,7 +21,6 @@ class Auction(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
     closing_date = models.DateTimeField()
 
-    
     class Meta:
         ordering=('id',)
     def __str__(self):
