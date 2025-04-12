@@ -54,9 +54,12 @@ class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 # Pujas
 from rest_framework.permissions import IsAuthenticated
 
+from rest_framework.response import Response
+from rest_framework import status
+
 class BidListCreate(generics.ListCreateAPIView):
     serializer_class = BidSerializer
-    permission_classes = [IsAuthenticated]  # Solo usuarios autenticados pueden pujar
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         auction_id = self.kwargs['auction_id']
@@ -64,8 +67,14 @@ class BidListCreate(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         auction_id = self.kwargs['auction_id']
-        serializer.save(auction_id=auction_id, bidder=self.request.user)  # Guarda el usuario automáticamente
+        serializer.save(auction_id=auction_id, bidder=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class BidRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BidSerializer
