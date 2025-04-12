@@ -52,7 +52,6 @@ class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AuctionDetailSerializer
 
 # Pujas
-from rest_framework.response import Response
 from rest_framework import status
 
 class BidListCreate(generics.ListCreateAPIView):

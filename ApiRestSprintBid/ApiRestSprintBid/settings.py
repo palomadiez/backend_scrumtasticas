@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'users',
-    
 ]
 
 MIDDLEWARE = [ 
@@ -141,7 +140,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'API Auctions',
-    'DESCRIPTION': 'Auctios web',
+    'DESCRIPTION': 'Auctions web',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
