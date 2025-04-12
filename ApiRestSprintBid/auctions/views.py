@@ -52,8 +52,6 @@ class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AuctionDetailSerializer
 
 # Pujas
-from rest_framework.permissions import IsAuthenticated
-
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -73,9 +71,8 @@ class BidListCreate(generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+    
 class BidRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BidSerializer
 
