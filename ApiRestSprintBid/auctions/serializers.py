@@ -3,6 +3,8 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Category, Auction, Bid
 from drf_spectacular.utils import extend_schema_field
+from django.db import models
+
 
 class CategoryListCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,10 +78,48 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"closing_date": "La fecha de cierre debe ser al menos 15 días posterior a la de creación."})
         return data
 
-class BidSerializer(serializers.ModelSerializer):
+class BidDetailSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
+    bidder_username = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Bid
-        fields = '__all__'
-        read_only_fields = ['auction', 'bidder']
+        fields = ["id", "auction", "price", "creation_date", "bidder_username"]
+        #read_only_fields = ['auction_id', 'bidder']
+
+    def get_bidder_username(self, obj):
+        return obj.bidder.username
+    
+
+class BidListCreateSerializer(serializers.ModelSerializer):
+    creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
+    bidder_username = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Bid
+        fields = ["id", "auction", "price", "creation_date", "bidder_username"]
+        read_only_fields = ['bidder']
+
+    def get_bidder_username(self, obj):
+        return obj.bidder.username
+
+    def validate(self, data):
+        auction = data['auction']
+        price = data['price']
+
+        if price <= 0:
+            raise serializers.ValidationError("El precio de la puja debe ser un número positivo.")
+        
+        max_bid = Bid.objects.filter(auction=auction).aggregate(models.Max('price'))['price__max']
+        if max_bid is not None and price <= max_bid:
+            raise serializers.ValidationError("La puja debe ser mayor que las existentes.")
+        
+        if auction.closing_date <= timezone.now():
+            raise serializers.ValidationError("La subasta ya ha cerrado, no se puede pujar.")
+        
+        return data
+    
+    def create(self, validated_data):
+        validated_data['bidder'] = self.context['request'].user
+        return super().create(validated_data)
+

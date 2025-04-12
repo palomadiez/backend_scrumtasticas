@@ -1,10 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import generics
 from .models import Category, Auction, Bid
-from .serializers import CategoryListCreateSerializer, CategoryDetailSerializer, AuctionListCreateSerializer, AuctionDetailSerializer, BidSerializer
+from .serializers import CategoryListCreateSerializer, CategoryDetailSerializer, AuctionListCreateSerializer, AuctionDetailSerializer, BidListCreateSerializer, BidDetailSerializer
 from django.db.models import Q
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from .permissions import IsOwnerOrAdmin
 
@@ -52,38 +52,46 @@ class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AuctionDetailSerializer
 
 # Pujas
-from rest_framework import status
-
 class BidListCreate(generics.ListCreateAPIView):
-    serializer_class = BidSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    serializer_class = BidListCreateSerializer
 
     def get_queryset(self):
-        auction_id = self.kwargs['auction_id']
-        return Bid.objects.filter(auction_id=auction_id)
+        auction_id = self.kwargs["auction_id"]
+        return Bid.objects.filter(auction_id=auction_id) 
+    
+    def perform_create(self, serializer):
+        auction_id = self.kwargs["auction_id"]
+        auction = get_object_or_404(Auction, id=auction_id)
+        serializer.save(auction=auction, bidder=self.request.user)
+
+# Ver, actualizar, eliminar Bid concreta
+class BidRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsOwnerOrAdmin]
+    serializer_class = BidDetailSerializer
+
+    def get_queryset(self):
+        auction_id = self.kwargs["auction_id"] 
+        return Bid.objects.filter(auction_id=auction_id) 
 
     def perform_create(self, serializer):
-        auction_id = self.kwargs['auction_id']
-        serializer.save(auction_id=auction_id, bidder=self.request.user)
+        auction_id = self.kwargs["auction_id"]
+        serializer.save(auction_id=auction_id) 
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-class BidRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = BidSerializer
+class BidCreateView(generics.CreateAPIView):
+    queryset = Bid.objects.all()
+    serializer_class = BidListCreateSerializer
+    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        auction_id = self.kwargs['auction_id']
-        return Bid.objects.filter(auction_id=auction_id)
-    
+    def perform_create(self, serializer):
+        serializer.save(bidder=self.request.user)
+
+
 
 # Users
 class UserAuctionListView(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         # Obtener las subastas del usuario autenticado
         user_auctions = Auction.objects.filter(auctioneer=request.user)
         serializer = AuctionListCreateSerializer(user_auctions, many=True)

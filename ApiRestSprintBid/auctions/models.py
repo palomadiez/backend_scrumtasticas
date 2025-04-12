@@ -35,4 +35,4 @@ class Bid(models.Model):
     class Meta:
         ordering=('id',)
     def __str__(self):
-        return self.title
+        return {self.bidder, self.price}
