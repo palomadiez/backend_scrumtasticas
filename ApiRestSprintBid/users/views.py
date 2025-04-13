@@ -86,7 +86,9 @@ class ChangePasswordView(APIView):
                 validate_password(serializer.validated_data['new_password'], user)
             except ValidationError as e:
                 return Response({"new_password": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+            print("antes", user.password)
             user.set_password(serializer.validated_data['new_password'])
             user.save()
+            print("después", user.password)
             return Response({"detail": "Password updated successfully."})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

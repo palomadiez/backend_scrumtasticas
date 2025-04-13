@@ -51,7 +51,6 @@ class UserSerializer(serializers.ModelSerializer):
     
     # Confirmar que las contraseñas coinciden
     def validate(self, data):
-        print("---------------DATA---------------", data)
         password = data.get("password")
         confirm = data.get("confirm_password")
 
@@ -67,3 +66,21 @@ class UserSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+    def validate_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError("La contraseña debe tener al menos 8 caracteres.")
+        if not re.search(r'\d', value):
+            raise serializers.ValidationError("La contraseña debe contener al menos un número.")
+        if not re.search(r'[a-zA-Z]', value):
+            raise serializers.ValidationError("La contraseña debe contener al menos una letra.")
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+            raise serializers.ValidationError("La contraseña debe contener al menos un carácter especial.")
+        
+        try:
+            validate_password(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(f"Error de validación de contraseña: {e.messages}")
+        
+        return value
+    
