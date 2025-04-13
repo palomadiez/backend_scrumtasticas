@@ -98,13 +98,13 @@ class BidListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bid
         fields = ["id", "auction", "price", "creation_date", "bidder_username"]
-        read_only_fields = ['bidder']
+        read_only_fields = ["auction", "bidder"]
 
     def get_bidder_username(self, obj):
         return obj.bidder.username
 
     def validate(self, data):
-        auction = data['auction']
+        auction = self.context['auction']
         price = data['price']
 
         if price <= 0:
@@ -116,10 +116,10 @@ class BidListCreateSerializer(serializers.ModelSerializer):
         
         if auction.closing_date <= timezone.now():
             raise serializers.ValidationError("La subasta ya ha cerrado, no se puede pujar.")
-        
+
         return data
-    
+
     def create(self, validated_data):
         validated_data['bidder'] = self.context['request'].user
+        validated_data['auction'] = self.context['auction']
         return super().create(validated_data)
-
