@@ -10,4 +10,8 @@ class IsOwnerOrAdmin(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         # Permitir si el usuario es el creador o es administrador
-        return obj.auctioneer == request.user or request.user.is_staff
+        user = request.user
+        return (
+            getattr(obj, 'auctioneer', None) == user or user.is_staff,
+            getattr(obj, 'bidder', None) == user or user.is_staff
+        )

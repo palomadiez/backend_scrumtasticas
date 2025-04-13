@@ -91,4 +91,6 @@ class ChangePasswordView(APIView):
             user.save()
             print("después", user.password)
             return Response({"detail": "Password updated successfully."})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            print("Errores del serializer:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
