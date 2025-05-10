@@ -15,3 +15,16 @@ class IsOwnerOrAdmin(BasePermission):
             getattr(obj, 'auctioneer', None) == user or user.is_staff,
             getattr(obj, 'bidder', None) == user or user.is_staff
         )
+    
+# ME FALTA ESTE PERMISO!!!!
+# IsAuthenticatedOrReadOnly
+
+class IsAuthenticatedOrReadOnly(BasePermission):
+    """
+    Permite acceso de lectura a cualquiera.
+    Solo los usuarios autenticados pueden crear.
+    """
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        return request.user and request.user.is_authenticated
