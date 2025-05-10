@@ -61,6 +61,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
        validated_data.pop('confirm_password', None)
+       validated_data.pop('id', None)
        return CustomUser.objects.create_user(**validated_data)
 
 class ChangePasswordSerializer(serializers.Serializer):
