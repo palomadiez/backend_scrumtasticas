@@ -29,7 +29,8 @@ SECRET_KEY = 'django-insecure-3a7w!evg@r=c2b+rlotchmvxyu1_yrxz&n%8q94vbx)7i9=@@%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '@dpg-cvtv2nqdbo4c739bjmfg-a.oregon-postgres.render.com', 'backend-scrumtasticas-2.onrender.com']
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '@dpg-d0hp2umuk2gs73c2220g-a.oregon-postgres.render.com/db_scrumtasticas_proyecto', 'backend-scrumtasticas-2.onrender.com']
 
 
 # Application definition
@@ -82,7 +83,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ApiRestSprintBid.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -133,6 +133,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+#Change paginación
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,
