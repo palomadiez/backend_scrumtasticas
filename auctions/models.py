@@ -15,7 +15,6 @@ class Auction(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)    
     rating = models.DecimalField(max_digits=3, decimal_places=2)
-    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, blank=True, default=1) 
     stock = models.IntegerField()
     brand = models.CharField(max_length=100)
     category = models.ForeignKey(Category, related_name='auctions',on_delete=models.CASCADE)
@@ -27,16 +26,6 @@ class Auction(models.Model):
         ordering=('id',)
     def __str__(self):
         return self.title
-    
-    def update_avg_rating(self):
-        ratings = self.ratings.all()
-        if ratings.exists():
-            avg = round(sum(r.score for r in ratings) / ratings.count(), 2)
-            self.avg_rating = avg
-            self.save()
-        else:
-            self.avg_rating = 1
-            self.save()
     
 class Bid(models.Model):
     auction = models.ForeignKey(Auction, related_name='bids', on_delete=models.CASCADE)

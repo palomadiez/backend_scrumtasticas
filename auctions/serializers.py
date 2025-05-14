@@ -4,6 +4,8 @@ from datetime import timedelta
 from .models import Category, Auction, Bid, Rating
 from drf_spectacular.utils import extend_schema_field
 from django.db import models
+from django.db.models import Avg
+
 
 # Category
 class CategoryListCreateSerializer(serializers.ModelSerializer):
@@ -21,6 +23,7 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
     isOpen = serializers.SerializerMethodField(read_only=True)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Auction
@@ -29,8 +32,13 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.BooleanField())
     def get_isOpen(self, obj):
         return obj.closing_date > timezone.now()
+    
+    def get_rating(self, obj):
+        avg = obj.ratings.aggregate(avg=Avg('score'))['avg']
+        return round(avg, 2) if avg is not None else 1
 
     def validate(self, data):
+        print("DATA", data)
         # Validación de precio
         if data.get("price", 1) <= 0:
             raise serializers.ValidationError({"price": "El precio debe ser un número natural positivo."})
@@ -50,7 +58,7 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
     isOpen = serializers.SerializerMethodField(read_only=True)
-    avg_rating = serializers.SerializerMethodField(read_only=True)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Auction
@@ -60,8 +68,9 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     def get_isOpen(self, obj):
         return obj.closing_date > timezone.now()
     
-    def get_avg_rating(self, obj):
-        return obj.avg_rating
+    def get_rating(self, obj):
+        avg = obj.ratings.aggregate(avg=Avg('score'))['avg']
+        return round(avg, 2) if avg is not None else 0
 
     def validate(self, data):
         if data.get("price", 1) <= 0:
@@ -142,14 +151,11 @@ class RatingSerializer(serializers.ModelSerializer):
             auction=validated_data['auction'],
             defaults={'score': validated_data['score']}
         )
-        validated_data['auction'].update_avg_rating()
-
         return instance
 
     def update(self, instance, validated_data):
         # Actualizar la puntuación y recalcular el rating promedio
         instance.score = validated_data.get('score', instance.score)
         instance.save()
-        validated_data['auction'].update_avg_rating()
         return instance
     
