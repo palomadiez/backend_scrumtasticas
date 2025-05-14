@@ -48,4 +48,17 @@ class Rating(models.Model):
         unique_together = ('user', 'auction')  # un usuario solo puede puntuar una vez
 
     def __str__(self):
-        return f"{self.user.username} → {self.auction.title}: {self.score}"
+        return f"{self.user.username}, {self.auction.title} - {self.score}"
+    
+class Comment(models.Model):
+    title = models.CharField(max_length=150)
+    text = models.CharField(max_length=1000)
+    creation_date = models.DateField(auto_now_add=True)
+    last_modification = models.DateField()
+    auction = models.ForeignKey(Auction, related_name="auction", on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, related_name="user", on_delete=models.CASCADE, default=1)
+
+    class Meta:
+        ordering = ('id',)
+    def __str__(self):
+        return f"{self.title} - {self.user.username} - {self.auction.title}"

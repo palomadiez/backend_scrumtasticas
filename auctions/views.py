@@ -1,13 +1,15 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework import generics
-from .models import Category, Auction, Bid, Rating
+from django.utils import timezone
+from .models import Category, Auction, Bid, Rating, Comment
 from .serializers import (CategoryListCreateSerializer,
                           CategoryDetailSerializer, 
                           AuctionListCreateSerializer, 
                           AuctionDetailSerializer,
                           BidListCreateSerializer,
                           BidDetailSerializer,
-                          RatingSerializer)
+                          RatingSerializer,
+                          CommentListCreateSerializer)
 
 from django.db.models import Q
 from rest_framework.views import APIView
@@ -120,3 +122,22 @@ class RatingDeleteView(generics.DestroyAPIView):
     def get_queryset(self):
         return Rating.objects.filter(user=self.request.user)
 
+
+# Comments
+class CommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentListCreateSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        auction_id = self.kwargs["auction_id"]
+        return Comment.objects.filter(auction_id=auction_id)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            user=self.request.user,
+            last_modification=timezone.now().date())
+        
+class CommentDeleteView(generics.DestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentListCreateSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]       
