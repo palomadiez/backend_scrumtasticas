@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from django.utils import timezone
 from datetime import timedelta
-from .models import Category, Auction, Bid
+from .models import Category, Auction, Bid, Rating
 from drf_spectacular.utils import extend_schema_field
 from django.db import models
 
+# Category
 class CategoryListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -15,6 +16,7 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
+# Subasta
 class AuctionListCreateSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
@@ -35,10 +37,6 @@ class AuctionListCreateSerializer(serializers.ModelSerializer):
         # Validación de stock
         if data.get("stock", 1) <= 0:
             raise serializers.ValidationError({"stock": "El stock debe ser un número natural positivo."})
-        # Validación de valoración
-        rating = data.get("rating", None)
-        if rating is not None and not (0 <= rating <= 5):
-            raise serializers.ValidationError({"rating": "La valoración debe estar entre 0 y 5."})
         # Validación de fechas
         creation = data.get("creation_date", timezone.now())
         closing = data.get("closing_date")
@@ -52,6 +50,7 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
     isOpen = serializers.SerializerMethodField(read_only=True)
+    avg_rating = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Auction
@@ -60,15 +59,15 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.BooleanField())
     def get_isOpen(self, obj):
         return obj.closing_date > timezone.now()
+    
+    def get_avg_rating(self, obj):
+        return obj.avg_rating
 
     def validate(self, data):
         if data.get("price", 1) <= 0:
             raise serializers.ValidationError({"price": "El precio debe ser un número natural positivo."})
         if data.get("stock", 1) <= 0:
             raise serializers.ValidationError({"stock": "El stock debe ser un número natural positivo."})
-        rating = data.get("rating", None)
-        if rating is not None and not (0 <= rating <= 5):
-            raise serializers.ValidationError({"rating": "La valoración debe estar entre 0 y 5."})
         creation = data.get("creation_date", timezone.now())
         closing = data.get("closing_date")
         if closing <= creation:
@@ -77,6 +76,8 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"closing_date": "La fecha de cierre debe ser al menos 15 días posterior a la de creación."})
         return data
 
+
+# Puja
 class BidDetailSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     bidder_username = serializers.SerializerMethodField(read_only=True)
@@ -89,7 +90,6 @@ class BidDetailSerializer(serializers.ModelSerializer):
     def get_bidder_username(self, obj):
         return obj.bidder.username
     
-
 class BidListCreateSerializer(serializers.ModelSerializer):
     creation_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", read_only=True)
     bidder_username = serializers.SerializerMethodField(read_only=True)
@@ -97,7 +97,7 @@ class BidListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bid
         fields = ["id", "auction", "price", "creation_date", "bidder_username"]
-        read_only_fields = ['bidder']
+        read_only_fields = ['bidder_username']
 
     def get_bidder_username(self, obj):
         return obj.bidder.username
@@ -122,3 +122,34 @@ class BidListCreateSerializer(serializers.ModelSerializer):
         validated_data['bidder'] = self.context['request'].user
         return super().create(validated_data)
 
+# Rating
+class RatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rating
+        fields = ['id', 'user', 'auction', 'score']
+        read_only_fields = ['user']  # el usuario se asigna automáticamente desde la request
+
+    def validate_score(self, value):
+        if not 1 <= value <= 5:
+            raise serializers.ValidationError("La puntuación debe estar entre 1 y 5.")
+        return value
+    
+
+    def create(self, validated_data):
+        # Si ya existe una valoración del usuario para la subasta, la sustituimos (update)
+        instance, created = Rating.objects.update_or_create(
+            user=self.context['request'].user,
+            auction=validated_data['auction'],
+            defaults={'score': validated_data['score']}
+        )
+        validated_data['auction'].update_avg_rating()
+
+        return instance
+
+    def update(self, instance, validated_data):
+        # Actualizar la puntuación y recalcular el rating promedio
+        instance.score = validated_data.get('score', instance.score)
+        instance.save()
+        validated_data['auction'].update_avg_rating()
+        return instance
+    

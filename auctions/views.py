@@ -1,7 +1,14 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework import generics
-from .models import Category, Auction, Bid
-from .serializers import CategoryListCreateSerializer, CategoryDetailSerializer, AuctionListCreateSerializer, AuctionDetailSerializer, BidListCreateSerializer, BidDetailSerializer
+from .models import Category, Auction, Bid, Rating
+from .serializers import (CategoryListCreateSerializer,
+                          CategoryDetailSerializer, 
+                          AuctionListCreateSerializer, 
+                          AuctionDetailSerializer,
+                          BidListCreateSerializer,
+                          BidDetailSerializer,
+                          RatingSerializer)
+
 from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -87,7 +94,6 @@ class BidCreateView(generics.CreateAPIView):
         serializer.save(bidder=self.request.user)
 
 
-
 # Users
 class UserAuctionListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -96,4 +102,21 @@ class UserAuctionListView(APIView):
         user_auctions = Auction.objects.filter(auctioneer=request.user)
         serializer = AuctionListCreateSerializer(user_auctions, many=True)
         return Response(serializer.data)
+    
+
+#Ratings
+class RatingCreateUpdateView(generics.CreateAPIView):
+    serializer_class = RatingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class RatingDeleteView(generics.DestroyAPIView):
+    serializer_class = RatingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Rating.objects.filter(user=self.request.user)
 

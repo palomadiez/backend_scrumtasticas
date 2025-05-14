@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import CustomUser
+from django.conf import settings
 
 class Category(models.Model):
     name = models.CharField(max_length=50, blank=False, unique=True)
@@ -12,8 +13,9 @@ class Auction(models.Model):
     auctioneer = models.ForeignKey(CustomUser, related_name='auctions', on_delete=models.CASCADE, blank=True, default=1)
     title = models.CharField(max_length=150)
     description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)    
     rating = models.DecimalField(max_digits=3, decimal_places=2)
+    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, blank=True, default=1) 
     stock = models.IntegerField()
     brand = models.CharField(max_length=100)
     category = models.ForeignKey(Category, related_name='auctions',on_delete=models.CASCADE)
@@ -26,6 +28,16 @@ class Auction(models.Model):
     def __str__(self):
         return self.title
     
+    def update_avg_rating(self):
+        ratings = self.ratings.all()
+        if ratings.exists():
+            avg = round(sum(r.score for r in ratings) / ratings.count(), 2)
+            self.avg_rating = avg
+            self.save()
+        else:
+            self.avg_rating = 1
+            self.save()
+    
 class Bid(models.Model):
     auction = models.ForeignKey(Auction, related_name='bids', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -36,3 +48,15 @@ class Bid(models.Model):
         ordering=('id',)
     def __str__(self):
         return {self.bidder, self.price}
+    
+# Ratings
+class Rating(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name='ratings')
+    score = models.IntegerField()
+
+    class Meta:
+        unique_together = ('user', 'auction')  # un usuario solo puede puntuar una vez
+
+    def __str__(self):
+        return f"{self.user.username} → {self.auction.title}: {self.score}"
