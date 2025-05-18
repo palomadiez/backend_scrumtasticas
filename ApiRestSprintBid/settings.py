@@ -29,11 +29,11 @@ SECRET_KEY = 'django-insecure-3a7w!evg@r=c2b+rlotchmvxyu1_yrxz&n%8q94vbx)7i9=@@%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
+# Hosts => añadir uno nuevo si hace falta
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '@dpg-d0hp2umuk2gs73c2220g-a.oregon-postgres.render.com/db_scrumtasticas_proyecto', 'backend-scrumtasticas-2.onrender.com']
 
 
-# Application definition
+# Application definition => si se crea otra app hay que meterla aquí
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -150,6 +150,7 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOW_ALL_ORIGINS = True 
 CORS_ALLOW_CREDENTIALS = True 
 
+# Cambiar la vida de un token de acceso o refresh
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),

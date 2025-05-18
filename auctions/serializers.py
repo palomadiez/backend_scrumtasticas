@@ -59,6 +59,7 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     closing_date = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ")
     isOpen = serializers.SerializerMethodField(read_only=True)
     rating = serializers.SerializerMethodField()
+    user_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Auction
@@ -71,6 +72,16 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
     def get_rating(self, obj):
         avg = obj.ratings.aggregate(avg=Avg('score'))['avg']
         return round(avg, 2) if avg is not None else 0
+    
+    def get_user_rating(self, obj):
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated:
+            try:
+                rating = obj.ratings.get(user=request.user)
+                return rating.score
+            except Rating.DoesNotExist:
+                return None
+        return None
 
     def validate(self, data):
         if data.get("price", 1) <= 0:
@@ -84,7 +95,6 @@ class AuctionDetailSerializer(serializers.ModelSerializer):
         if closing <= creation + timedelta(days=15):
             raise serializers.ValidationError({"closing_date": "La fecha de cierre debe ser al menos 15 días posterior a la de creación."})
         return data
-
 
 # Puja
 class BidDetailSerializer(serializers.ModelSerializer):
@@ -166,8 +176,8 @@ class CommentListCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'title', 'text', 'creation_date', 'last_modification', 'auction', 'user']
-        read_only_fields = ['user', 'creation_date', 'last_modification', 'user_username']
+        fields = ['id', 'title', 'text', 'creation_date', 'last_modification', 'auction', 'user_username']
+        read_only_fields = ['creation_date', 'last_modification', 'user_username']
 
     def get_user_username(self, obj):
         return obj.user.username
@@ -176,3 +186,4 @@ class CommentListCreateSerializer(serializers.ModelSerializer):
         validated_data['user'] = self.context['request'].user
         validated_data['last_modification'] = timezone.now().date()
         return super().create(validated_data)
+    

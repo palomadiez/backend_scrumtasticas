@@ -60,6 +60,11 @@ class AuctionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     queryset = Auction.objects.all()
     serializer_class = AuctionDetailSerializer
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
 # Pujas
 class BidListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -137,7 +142,11 @@ class CommentListCreateView(generics.ListCreateAPIView):
             user=self.request.user,
             last_modification=timezone.now().date())
         
-class CommentDeleteView(generics.DestroyAPIView):
+class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentListCreateSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]       
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def perform_update(self, serializer):
+        serializer.save(last_modification=timezone.now().date())
+    
