@@ -14,7 +14,7 @@ class Auction(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)    
-    rating = models.DecimalField(max_digits=3, decimal_places=2)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, null=True)
     stock = models.IntegerField()
     brand = models.CharField(max_length=100)
     category = models.ForeignKey(Category, related_name='auctions',on_delete=models.CASCADE)
@@ -52,7 +52,7 @@ class Rating(models.Model):
     
 class Comment(models.Model):
     title = models.CharField(max_length=150)
-    text = models.CharField(max_length=1000)
+    text = models.TextField()
     creation_date = models.DateField(auto_now_add=True)
     last_modification = models.DateField()
     auction = models.ForeignKey(Auction, related_name="auction", on_delete=models.CASCADE)
